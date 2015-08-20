@@ -23,14 +23,44 @@
 import UIKit
 
 class ViewController: UIViewController {
+    
+    @IBOutlet var dataTable: UITableView!
+    @IBOutlet var toolbar: UIToolbar!
+    
+    private var allAlbums = [Album]()
+    private var currentAlbumData : (title: [String], values:[String])?
+    private var currentAlbumIndex = 0
 
-	@IBOutlet var dataTable: UITableView!
-	@IBOutlet var toolbar: UIToolbar!
-	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		// Do any additional setup after loading the view, typically from a nib.
-	}
+    
+        self.navigationController?.navigationBar.translucent = false
+        currentAlbumIndex = 0
+        
+        allAlbums = LibraryAPI.sharedInstance.getAlbum()
+        
+        dataTable.delegate = self
+        dataTable.dataSource = self
+        dataTable.backgroundView = nil
+        view.addSubview(dataTable!)
+        
+        self.showDataForAlbum(currentAlbumIndex)
+    }
+    
+    func showDataForAlbum(albumIndex: Int) {
+        if (albumIndex < allAlbums.count && albumIndex > -1) {
+            let album = allAlbums[albumIndex]
+            
+            currentAlbumData = album.ae_TableRepresentation()
+        }
+        else {
+            currentAlbumData = nil
+        }
+        
+        dataTable!.reloadData()
+    }
+    
+    
 
 	override func didReceiveMemoryWarning() {
 		super.didReceiveMemoryWarning()
@@ -38,5 +68,32 @@ class ViewController: UIViewController {
 	}
 
 
+}
+
+extension ViewController: UITableViewDataSource {
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if let albumData = currentAlbumData {
+            return albumData.title.count
+        }
+        else {
+            return 0
+        }
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        var cell:UITableViewCell = tableView.dequeueReusableCellWithIdentifier("Cell", forIndexPath: indexPath) as! UITableViewCell
+        if let albumData = currentAlbumData {
+            cell.textLabel!.text = albumData.title[indexPath.row]
+            cell.detailTextLabel!.text = albumData.values[indexPath.row]
+        }
+    
+        return cell
+    }
+    
+}
+
+extension ViewController: UITableViewDelegate {
+        
 }
 
